@@ -1,16 +1,56 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { WORDS, getRandomWord } from "./words";
 import "./index.css";
 
 type Status = "correct" | "present" | "absent" | "empty";
+type Language = "fr" | "en";
 
-const KEYBOARD_ROWS = [
+interface AppProps {
+  language: Language;
+}
+
+const KEYBOARD_ROWS_FR = [
   ["A", "Z", "E", "R", "T", "Y", "U", "I", "O", "P"],
   ["Q", "S", "D", "F", "G", "H", "J", "K", "L", "M"],
   ["ENTER", "W", "X", "C", "V", "B", "N", "DELETE"],
 ];
 
-export function App() {
+const KEYBOARD_ROWS_EN = [
+  ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+  ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+  ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "DELETE"],
+];
+
+const MESSAGES = {
+  fr: {
+    tooShort: "Trop court",
+    notInList: "Pas dans la liste",
+    congratulations: "Félicitations !",
+    lost: "Perdu ! Le mot était :",
+    attempts: (count: number) => `${count} ${count > 1 ? "essais" : "essai"}`,
+    amazing: "Bravo !",
+    tooBad: "Dommage...",
+    foundWord: (count: number) => `Vous avez trouvé le mot en ${count} ${count > 1 ? "essais" : "essai"}.`,
+    newGame: "Nouvelle Partie",
+  },
+  en: {
+    tooShort: "Too short",
+    notInList: "Not in list",
+    congratulations: "Congratulations!",
+    lost: "Lost! The word was:",
+    attempts: (count: number) => `${count} ${count > 1 ? "attempts" : "attempt"}`,
+    amazing: "Amazing!",
+    tooBad: "Too bad...",
+    foundWord: (count: number) => `You found the word in ${count} ${count > 1 ? "attempts" : "attempt"}.`,
+    newGame: "New Game",
+  },
+};
+
+const TITLE_TRANSLATION = {
+  fr: "LE MOT",
+  en: "WORDLE",
+};
+
+export function App({ language }: AppProps) {
   const [targetWord, setTargetWord] = useState("");
   const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState("");
@@ -19,13 +59,18 @@ export function App() {
   const [shake, setShake] = useState(false);
   const [usedLetters, setUsedLetters] = useState<Record<string, Status>>({});
 
+  const msgs = MESSAGES[language];
+  const keyboardRows = language === "fr" ? KEYBOARD_ROWS_FR : KEYBOARD_ROWS_EN;
+
   // Initialize game
   useEffect(() => {
     startNewGame();
-  }, []);
+  }, [language]);
 
-  const startNewGame = () => {
-    setTargetWord(getRandomWord());
+  const startNewGame = async () => {
+    const response = await fetch(`/api/random-word?lang=${language}`);
+    const data = await response.json();
+    setTargetWord(data.word);
     setGuesses([]);
     setCurrentGuess("");
     setGameState("PLAYING");
@@ -75,19 +120,23 @@ export function App() {
     setUsedLetters(newUsedLetters);
   };
 
-  const handleKeyPress = useCallback((key: string) => {
+  const handleKeyPress = useCallback(async (key: string) => {
     if (gameState !== "PLAYING") return;
 
     if (key === "ENTER" || key === "Enter") {
       if (currentGuess.length < 5) {
-        setMessage("Trop court");
+        setMessage(msgs.tooShort);
         setShake(true);
         setTimeout(() => setShake(false), 500);
         return;
       }
 
-      if (!WORDS.includes(currentGuess)) {
-        setMessage("Pas dans la liste");
+      // Validate word via API
+      const response = await fetch(`/api/validate-word?lang=${language}&word=${currentGuess}`);
+      const data = await response.json();
+      
+      if (!data.isValid) {
+        setMessage(msgs.notInList);
         setShake(true);
         setTimeout(() => setShake(false), 500);
         return;
@@ -101,10 +150,10 @@ export function App() {
 
       if (currentGuess === targetWord) {
         setGameState("WON");
-        setMessage("Félicitations !");
+        setMessage(msgs.congratulations);
       } else if (newGuesses.length === 6) {
         setGameState("LOST");
-        setMessage(`Perdu ! Le mot était : ${targetWord}`);
+        setMessage(`${msgs.lost} ${targetWord}`);
       }
     } else if (key === "DELETE" || key === "Backspace") {
       setCurrentGuess(prev => prev.slice(0, -1));
@@ -116,7 +165,7 @@ export function App() {
         setMessage("");
       }
     }
-  }, [currentGuess, gameState, guesses, targetWord, getLetterStatuses, usedLetters]);
+  }, [currentGuess, gameState, guesses, targetWord, getLetterStatuses, usedLetters, msgs, language]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -139,10 +188,23 @@ export function App() {
     );
   };
 
+  const handleLanguageChange = (newLanguage: Language) => {
+    if (newLanguage !== language) {
+      window.location.href = newLanguage === "en" ? "/en" : "/fr";
+    }
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen p-4 max-w-md mx-auto relative">
-      <header className="w-full border-b border-gray-700 py-4 mb-8 text-center">
-        <h1 className="text-4xl font-black tracking-widest">LE MOT</h1>
+      <header className="w-full border-b border-gray-700 py-4 mb-8 flex items-center justify-between">
+        <h1 className="text-4xl font-black tracking-widest flex-1 text-center">{TITLE_TRANSLATION[language]}</h1>
+        <button
+          onClick={() => handleLanguageChange(language === "fr" ? "en" : "fr")}
+          className="absolute top-4 right-4 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm font-semibold transition-colors"
+          title={language === "fr" ? "Switch to English" : "Passer au français"}
+        >
+          {language === "fr" ? "EN" : "FR"}
+        </button>
       </header>
 
       <main className="flex-1 w-full flex flex-col items-center justify-center gap-2">
@@ -181,7 +243,7 @@ export function App() {
       {/* Keyboard */}
       <footer className="w-full max-w-[500px] mt-8">
         <div className="flex flex-col gap-2">
-          {KEYBOARD_ROWS.map((row, i) => (
+          {keyboardRows.map((row, i) => (
             <div key={i} className="flex gap-1.5 justify-center">
               {row.map(key => {
                 const status = usedLetters[key] || "";
@@ -205,18 +267,18 @@ export function App() {
         <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
           <div className="bg-[#121213] border border-gray-700 p-8 rounded-xl shadow-2xl text-center max-w-sm w-full animate-bounce-in">
             <h2 className="text-3xl font-bold mb-4">
-              {gameState === "WON" ? "Bravo !" : "Dommage..."}
+              {gameState === "WON" ? msgs.amazing : msgs.tooBad}
             </h2>
             <p className="text-gray-400 mb-6">
               {gameState === "WON" 
-                ? `Vous avez trouvé le mot en ${guesses.length} ${guesses.length > 1 ? "essais" : "essai"}.` 
-                : `Le mot à deviner était : ${targetWord}`}
+                ? msgs.foundWord(guesses.length)
+                : `${msgs.lost} ${targetWord}`}
             </p>
             <button
               onClick={startNewGame}
               className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full transition-colors text-lg"
             >
-              Nouvelle Partie
+              {msgs.newGame}
             </button>
           </div>
         </div>
@@ -224,5 +286,3 @@ export function App() {
     </div>
   );
 }
-
-export default App;
