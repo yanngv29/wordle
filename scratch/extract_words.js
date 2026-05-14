@@ -1,8 +1,8 @@
 
 const fs = require('fs');
 
-const inputFile = 'data/liste.de.mots.francais.frgut.txt';
-const outputFile = 'src/words.ts';
+const inputFile = 'data/ods.txt';
+const outputFile = 'src/words2.ts';
 
 function normalize(str) {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
@@ -11,9 +11,9 @@ function normalize(str) {
 try {
   const data = fs.readFileSync(inputFile, 'utf8');
   const lines = data.split(/\r?\n/);
-  
+
   const words5 = new Set();
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed.length === 5) {
@@ -24,16 +24,16 @@ try {
       }
     }
   }
-  
+
   const wordList = Array.from(words5).sort();
-  
+
   const content = `export const WORDS = ${JSON.stringify(wordList, null, 2)};
 
 export function getRandomWord(): string {
   return WORDS[Math.floor(Math.random() * WORDS.length)];
 }
 `;
-  
+
   fs.writeFileSync(outputFile, content);
   console.log(`Generated ${wordList.length} words in ${outputFile}`);
 } catch (err) {

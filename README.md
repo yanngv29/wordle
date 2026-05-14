@@ -70,4 +70,7 @@ Ouvrez [http://localhost:3000](http://localhost:3000) pour jouer.
 ---
 
 ### Crédits
-Développé par [USER] avec l'aide précieuse d'**Antigravity** (Google DeepMind).
+Développé par Yann avec l'aide précieuse d'**Antigravity** (Google DeepMind).
+
+### Propos de Yann
+Je n'ai fait que prompter.
