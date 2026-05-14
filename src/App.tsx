@@ -31,6 +31,11 @@ const MESSAGES = {
     tooBad: "Dommage...",
     foundWord: (count: number) => `Vous avez trouvé le mot en ${count} ${count > 1 ? "essais" : "essai"}.`,
     newGame: "Nouvelle Partie",
+    about: "À propos",
+    sources: "Sources",
+    language: "Langue",
+    switchToEnglish: "Switch to English",
+    switchToFrench: "Passer au français",
   },
   en: {
     tooShort: "Too short",
@@ -42,6 +47,11 @@ const MESSAGES = {
     tooBad: "Too bad...",
     foundWord: (count: number) => `You found the word in ${count} ${count > 1 ? "attempts" : "attempt"}.`,
     newGame: "New Game",
+    about: "About",
+    sources: "Sources",
+    language: "Language",
+    switchToEnglish: "Switch to English",
+    switchToFrench: "Switch to French",
   },
 };
 
@@ -58,6 +68,7 @@ export function App({ language }: AppProps) {
   const [message, setMessage] = useState("");
   const [shake, setShake] = useState(false);
   const [usedLetters, setUsedLetters] = useState<Record<string, Status>>({});
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const msgs = MESSAGES[language];
   const keyboardRows = language === "fr" ? KEYBOARD_ROWS_FR : KEYBOARD_ROWS_EN;
@@ -195,21 +206,81 @@ export function App({ language }: AppProps) {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen p-4 max-w-md mx-auto relative">
-      <header className="w-full border-b border-gray-700 py-4 mb-8 flex items-center justify-between">
-        <h1 className="text-4xl font-black tracking-widest flex-1 text-center">{TITLE_TRANSLATION[language]}</h1>
+    <div className="flex flex-col items-center min-h-screen p-2 max-w-md mx-auto relative bg-[#121213]">
+      <header className="w-full border-b border-gray-700 py-2 mb-3 flex items-center justify-between">
+        <h1 className="text-2xl md:text-4xl font-black tracking-widest flex-1 text-center">{TITLE_TRANSLATION[language]}</h1>
         <button
-          onClick={() => handleLanguageChange(language === "fr" ? "en" : "fr")}
-          className="absolute top-4 right-4 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm font-semibold transition-colors"
-          title={language === "fr" ? "Switch to English" : "Passer au français"}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="absolute top-2 right-2 p-2 text-xl hover:bg-gray-700 rounded transition-colors"
+          title="Menu"
         >
-          {language === "fr" ? "EN" : "FR"}
+          ☰
         </button>
       </header>
 
-      <main className="flex-1 w-full flex flex-col items-center justify-center gap-2">
+      {/* Menu Burger */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-40 flex" onClick={() => setIsMenuOpen(false)}>
+          <div 
+            className="bg-[#1a1a1b] border border-gray-700 rounded-lg shadow-2xl p-4 m-2 max-w-xs w-full md:max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">Menu</h2>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="text-2xl hover:text-gray-400 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {/* Language Switcher */}
+              <div className="pb-3 border-b border-gray-700">
+                <button
+                  onClick={() => {
+                    handleLanguageChange(language === "fr" ? "en" : "fr");
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-left font-semibold"
+                >
+                  {msgs.language}: {language === "fr" ? "English" : "Français"}
+                </button>
+              </div>
+
+              {/* About */}
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  alert(language === "fr" 
+                    ? "Le Mot - Wordle en Français & English\n\nDéveloppé par Yann\n\n avec Antigravity (gemini 3 flash) et GitHub Copilot (Claude Haiku 4.5)\n\nUn jeu de réflexion où vous devez deviner un mot de 5 lettres en 6 essais."
+                    : "Le Mot - Wordle in French & English\n\nDeveloped by Yann\n\n with Antigravity (gemini 3 flash) and GitHub Copilot (Claude Haiku 4.5)\n\nA puzzle game where you must guess a 5-letter word in 6 attempts."
+                  );
+                }}
+                className="w-full px-4 py-2 text-left hover:bg-gray-700 rounded transition-colors"
+              >
+                {msgs.about}
+              </button>
+
+              {/* Sources */}
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  window.open("https://github.com/yanngv29/wordle", "_blank");
+                }}
+                className="w-full px-4 py-2 text-left hover:bg-gray-700 rounded transition-colors"
+              >
+                {msgs.sources}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <main className="flex-1 w-full flex flex-col items-center justify-center gap-1">
         {/* Grid */}
-        <div className={`grid grid-rows-6 gap-1 w-full max-w-[350px] ${shake ? "animate-shake" : ""}`}>
+        <div className={`grid grid-rows-6 gap-1 w-full max-w-[300px] md:max-w-[350px] ${shake ? "animate-shake" : ""}`}>
           {[...Array(6)].map((_, rowIndex) => {
             const guess = guesses[rowIndex];
             const isCurrentRow = rowIndex === guesses.length;
@@ -231,9 +302,9 @@ export function App({ language }: AppProps) {
         </div>
 
         {/* Message */}
-        <div className="h-12 flex items-center justify-center">
+        <div className="h-10 flex items-center justify-center">
           {message && (
-            <div className="bg-white text-black px-4 py-2 rounded-md font-bold shadow-lg">
+            <div className="bg-white text-black px-4 py-2 rounded-md font-bold shadow-lg text-sm">
               {message}
             </div>
           )}
@@ -241,17 +312,17 @@ export function App({ language }: AppProps) {
       </main>
 
       {/* Keyboard */}
-      <footer className="w-full max-w-[500px] mt-8">
-        <div className="flex flex-col gap-2">
+      <footer className="w-full max-w-[450px] md:max-w-[500px] mt-2 mb-2">
+        <div className="flex flex-col gap-1.5">
           {keyboardRows.map((row, i) => (
-            <div key={i} className="flex gap-1.5 justify-center">
+            <div key={i} className="flex gap-1 justify-center">
               {row.map(key => {
                 const status = usedLetters[key] || "";
                 return (
                   <button
                     key={key}
                     onClick={() => handleKeyPress(key)}
-                    className={`key ${key.length > 1 ? "wide text-xs" : ""} ${status}`}
+                    className={`key text-xs md:text-sm ${key.length > 1 ? "wide" : ""} ${status}`}
                   >
                     {key === "DELETE" ? "⌫" : key}
                   </button>
@@ -265,18 +336,18 @@ export function App({ language }: AppProps) {
       {/* Game End Modal */}
       {gameState !== "PLAYING" && (
         <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
-          <div className="bg-[#121213] border border-gray-700 p-8 rounded-xl shadow-2xl text-center max-w-sm w-full animate-bounce-in">
-            <h2 className="text-3xl font-bold mb-4">
+          <div className="bg-[#121213] border border-gray-700 p-6 md:p-8 rounded-xl shadow-2xl text-center max-w-sm w-full mx-2 animate-bounce-in">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">
               {gameState === "WON" ? msgs.amazing : msgs.tooBad}
             </h2>
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-400 mb-6 text-sm md:text-base">
               {gameState === "WON" 
                 ? msgs.foundWord(guesses.length)
                 : `${msgs.lost} ${targetWord}`}
             </p>
             <button
               onClick={startNewGame}
-              className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full transition-colors text-lg"
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 md:py-3 md:px-8 rounded-full transition-colors text-sm md:text-lg"
             >
               {msgs.newGame}
             </button>
