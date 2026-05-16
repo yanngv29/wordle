@@ -167,6 +167,7 @@ dist/                  # Fichiers compilés (généré par `bun run build`)
 
 **Développeurs:**
 - **Yann** - Auteur principal
+- **Gemini / Antigravity ** - Version initiale du projet
 - **GitHub Copilot** (Claude Haiku 4.5) - Implémentation du support multilingue (mai 2026):
   - Architecture multilingue FR/EN
   - Claviers adaptés (AZERTY/QWERTY)

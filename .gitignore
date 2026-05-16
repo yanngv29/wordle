@@ -37,3 +37,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # bm2 config 
 wordle.pm2.config.json
+
+# Database
+*.db
