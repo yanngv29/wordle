@@ -60,6 +60,15 @@ const TITLE_TRANSLATION = {
   en: "WORDLE",
 };
 
+interface PlayerStats {
+  playerId: string;
+  gamesPlayed: number;
+  gamesWon: number;
+  currentStreak: number;
+  maxStreak: number;
+  lastPlayedDate: string | null;
+}
+
 export function App({ language }: AppProps) {
   const [targetWord, setTargetWord] = useState("");
   const [guesses, setGuesses] = useState<string[]>([]);
@@ -69,24 +78,177 @@ export function App({ language }: AppProps) {
   const [shake, setShake] = useState(false);
   const [usedLetters, setUsedLetters] = useState<Record<string, Status>>({});
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [playerId, setPlayerId] = useState("");
+  const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+  const [gameDate] = useState(new Date().toISOString().split("T")[0]);
 
   const msgs = MESSAGES[language];
   const keyboardRows = language === "fr" ? KEYBOARD_ROWS_FR : KEYBOARD_ROWS_EN;
 
+  // Initialize playerId and load player stats
+  useEffect(() => {
+    initializePlayer();
+  }, []);
+
+  const initializePlayer = async () => {
+    // Get or create playerId
+    let id = localStorage.getItem("playerId");
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem("playerId", id);
+    }
+    setPlayerId(id);
+
+    // Load player stats
+    try {
+      const response = await fetch(`/api/player/${id}`);
+      const stats = await response.json();
+      setPlayerStats(stats);
+    } catch (error) {
+      console.error("Failed to load player stats:", error);
+      // Initialize with default stats
+      setPlayerStats({
+        playerId: id,
+        gamesPlayed: 0,
+        gamesWon: 0,
+        currentStreak: 0,
+        maxStreak: 0,
+        lastPlayedDate: null,
+      });
+    }
+  };
+
   // Initialize game
   useEffect(() => {
-    startNewGame();
-  }, [language]);
+    if (playerId) {
+      startNewGame();
+    }
+  }, [language, playerId]);
 
   const startNewGame = async () => {
-    const response = await fetch(`/api/random-word?lang=${language}`);
-    const data = await response.json();
-    setTargetWord(data.word);
-    setGuesses([]);
-    setCurrentGuess("");
-    setGameState("PLAYING");
-    setMessage("");
-    setUsedLetters({});
+    try {
+      // Load today's game record (if exists)
+      const gameRecordResponse = await fetch(
+        `/api/game/today?playerId=${playerId}&lang=${language}`
+      );
+      const { gameRecord } = await gameRecordResponse.json();
+
+      // If game already played today, restore the state
+      if (gameRecord) {
+        setTargetWord(gameRecord.solution);
+        setGuesses(gameRecord.attempts);
+        setCurrentGuess("");
+        setGameState(gameRecord.won ? "WON" : "LOST");
+        setMessage("");
+        
+        // Restore used letters
+        const newUsedLetters: Record<string, Status> = {};
+        gameRecord.attempts.forEach((guess) => {
+          const statuses = getLetterStatuses(guess, gameRecord.solution);
+          guess.split("").forEach((char, i) => {
+            const status = statuses[i];
+            const currentStatus = newUsedLetters[char];
+            if (!currentStatus || status === "correct" || (status === "present" && currentStatus === "absent")) {
+              newUsedLetters[char] = status;
+            }
+          });
+        });
+        setUsedLetters(newUsedLetters);
+        return;
+      }
+
+      // Get daily word for today
+      const wordResponse = await fetch(`/api/daily-word?lang=${language}&date=${gameDate}`);
+      const { word } = await wordResponse.json();
+      
+      setTargetWord(word);
+      setGuesses([]);
+      setCurrentGuess("");
+      setGameState("PLAYING");
+      setMessage("");
+      setUsedLetters({});
+    } catch (error) {
+      console.error("Failed to start new game:", error);
+      // Fallback to random word if daily word fails
+      const response = await fetch(`/api/random-word?lang=${language}`);
+      const data = await response.json();
+      setTargetWord(data.word);
+      setGuesses([]);
+      setCurrentGuess("");
+      setGameState("PLAYING");
+      setMessage("");
+      setUsedLetters({});
+    }
+  };
+
+  // Save game stats when game ends
+  useEffect(() => {
+    if (gameState !== "PLAYING" && targetWord && playerId && playerStats) {
+      saveGameStats();
+    }
+  }, [gameState, targetWord, playerId, playerStats, guesses, gameDate]);
+
+  const saveGameStats = async () => {
+    if (!playerId || !playerStats) return;
+
+    try {
+      const isWon = gameState === "WON";
+      const newGamesPlayed = playerStats.gamesPlayed + 1;
+      const newGamesWon = isWon ? playerStats.gamesWon + 1 : playerStats.gamesWon;
+
+      // Calculate streak
+      let newCurrentStreak = playerStats.currentStreak;
+      if (isWon) {
+        newCurrentStreak = playerStats.currentStreak + 1;
+      } else {
+        newCurrentStreak = 0;
+      }
+
+      const newMaxStreak = Math.max(newCurrentStreak, playerStats.maxStreak);
+
+      // Save to backend
+      const response = await fetch("/api/player/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerId,
+          stats: {
+            gamesPlayed: newGamesPlayed,
+            gamesWon: newGamesWon,
+            currentStreak: newCurrentStreak,
+            maxStreak: newMaxStreak,
+            lastPlayedDate: gameDate,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        // Update local stats
+        setPlayerStats({
+          ...playerStats,
+          gamesPlayed: newGamesPlayed,
+          gamesWon: newGamesWon,
+          currentStreak: newCurrentStreak,
+          maxStreak: newMaxStreak,
+          lastPlayedDate: gameDate,
+        });
+
+        // Save game record
+        await fetch("/api/game/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            playerId,
+            date: gameDate,
+            solution: targetWord,
+            attempts: guesses,
+            won: isWon,
+          }),
+        });
+      }
+    } catch (error) {
+      console.error("Failed to save game stats:", error);
+    }
   };
 
   const getLetterStatuses = useCallback((guess: string, target: string): Status[] => {
@@ -236,6 +398,45 @@ export function App({ language }: AppProps) {
             </div>
             
             <div className="space-y-3">
+              {/* Statistics */}
+              {playerStats && (
+                <div className="pb-3 border-b border-gray-700">
+                  <h3 className="text-sm font-semibold mb-2 text-gray-400">
+                    {language === "fr" ? "Statistiques" : "Statistics"}
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="text-center p-2 bg-gray-900 rounded">
+                      <div className="font-bold text-lg">{playerStats.gamesPlayed}</div>
+                      <div className="text-xs text-gray-400">
+                        {language === "fr" ? "Parties" : "Games"}
+                      </div>
+                    </div>
+                    <div className="text-center p-2 bg-gray-900 rounded">
+                      <div className="font-bold text-lg">
+                        {playerStats.gamesPlayed > 0
+                          ? Math.round((playerStats.gamesWon / playerStats.gamesPlayed) * 100)
+                          : 0}%
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {language === "fr" ? "Victoires" : "Wins"}
+                      </div>
+                    </div>
+                    <div className="text-center p-2 bg-gray-900 rounded">
+                      <div className="font-bold text-lg">{playerStats.currentStreak}</div>
+                      <div className="text-xs text-gray-400">
+                        {language === "fr" ? "Série" : "Streak"}
+                      </div>
+                    </div>
+                    <div className="text-center p-2 bg-gray-900 rounded">
+                      <div className="font-bold text-lg">{playerStats.maxStreak}</div>
+                      <div className="text-xs text-gray-400">
+                        {language === "fr" ? "Max" : "Max"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Language Switcher */}
               <div className="pb-3 border-b border-gray-700">
                 <button
