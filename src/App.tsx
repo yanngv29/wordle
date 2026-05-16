@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import "./index.css";
 
 type Status = "correct" | "present" | "absent" | "empty";
@@ -36,6 +37,11 @@ const MESSAGES = {
     language: "Langue",
     switchToEnglish: "Switch to English",
     switchToFrench: "Passer au français",
+    myId: "Mon ID",
+    copyId: "Copier l'ID",
+    qrCode: "Code QR",
+    scanToRestore: "Scannez pour restaurer votre ID",
+    idCopied: "ID copié !",
   },
   en: {
     tooShort: "Too short",
@@ -52,6 +58,11 @@ const MESSAGES = {
     language: "Language",
     switchToEnglish: "Switch to English",
     switchToFrench: "Switch to French",
+    myId: "My ID",
+    copyId: "Copy ID",
+    qrCode: "QR Code",
+    scanToRestore: "Scan to restore your ID",
+    idCopied: "ID copied!",
   },
 };
 
@@ -81,6 +92,8 @@ export function App({ language }: AppProps) {
   const [playerId, setPlayerId] = useState("");
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
   const [gameDate] = useState(new Date().toISOString().split("T")[0]);
+  const [showQrCode, setShowQrCode] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState("");
 
   const msgs = MESSAGES[language];
   const keyboardRows = language === "fr" ? KEYBOARD_ROWS_FR : KEYBOARD_ROWS_EN;
@@ -91,12 +104,18 @@ export function App({ language }: AppProps) {
   }, []);
 
   const initializePlayer = async () => {
-    // Get or create playerId
-    let id = localStorage.getItem("playerId");
+    // Check if playerId is in URL query parameter
+    const params = new URLSearchParams(window.location.search);
+    const urlPlayerId = params.get("playerId");
+
+    let id = urlPlayerId || localStorage.getItem("playerId");
+    
     if (!id) {
       id = crypto.randomUUID();
-      localStorage.setItem("playerId", id);
     }
+    
+    // Save to localStorage
+    localStorage.setItem("playerId", id);
     setPlayerId(id);
 
     // Load player stats
@@ -361,6 +380,22 @@ export function App({ language }: AppProps) {
     );
   };
 
+  const copyPlayerId = async () => {
+    try {
+      await navigator.clipboard.writeText(playerId);
+      setCopyFeedback(msgs.idCopied);
+      setTimeout(() => setCopyFeedback(""), 2000);
+    } catch (error) {
+      console.error("Failed to copy:", error);
+    }
+  };
+
+  const getQrCodeUrl = () => {
+    const baseUrl = window.location.origin;
+    const currentPath = language === "en" ? "/en" : "/fr";
+    return `${baseUrl}${currentPath}?playerId=${playerId}`;
+  };
+
   const handleLanguageChange = (newLanguage: Language) => {
     if (newLanguage !== language) {
       window.location.href = newLanguage === "en" ? "/en" : "/fr";
@@ -436,6 +471,41 @@ export function App({ language }: AppProps) {
                   </div>
                 </div>
               )}
+
+              {/* Player ID and QR Code */}
+              <div className="pb-3 border-b border-gray-700">
+                <button
+                  onClick={() => setShowQrCode(!showQrCode)}
+                  className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-left font-semibold mb-2"
+                >
+                  {msgs.myId}: {playerId.slice(0, 8)}...
+                </button>
+                
+                {showQrCode && (
+                  <div className="bg-gray-900 p-4 rounded flex flex-col items-center gap-3">
+                    <div className="bg-white p-2 rounded">
+                      <QRCodeSVG 
+                        value={getQrCodeUrl()} 
+                        size={150} 
+                        level="H" 
+                        includeMargin={true}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 text-center">
+                      {msgs.scanToRestore}
+                    </p>
+                    <button
+                      onClick={copyPlayerId}
+                      className="w-full px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm transition-colors"
+                    >
+                      {msgs.copyId}
+                    </button>
+                    {copyFeedback && (
+                      <p className="text-xs text-green-400">{copyFeedback}</p>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Language Switcher */}
               <div className="pb-3 border-b border-gray-700">
