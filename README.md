@@ -168,6 +168,7 @@ dist/                  # Fichiers compilés (généré par `bun run build`)
 **Développeurs:**
 - **Yann** - Auteur principal
 - **Gemini / Antigravity ** - Version initiale du projet
+  - passe souvent derrière Copilot pour réparer.
 - **GitHub Copilot** (Claude Haiku 4.5) - Implémentation du support multilingue (mai 2026):
   - Architecture multilingue FR/EN
   - Claviers adaptés (AZERTY/QWERTY)
@@ -177,7 +178,7 @@ dist/                  # Fichiers compilés (généré par `bun run build`)
   - Build workflow optimisé
 
 **Dictionnaires:**
-- Français : `liste.de.mots.francais.frgut.txt` (FRGUT)
+- Français : `ods.txt`
 - Anglais : `5letter.words.list.txt`
 
 ### Remerciements

@@ -15,7 +15,7 @@ function loadDictionary(filename: string): string[] {
   return words;
 }
 
-export const FR_WORDS = loadDictionary("liste.de.mots.francais.frgut.txt");
+export const FR_WORDS = loadDictionary("ods.txt");
 export const EN_WORDS = loadDictionary("5letter.words.list.txt");
 
 export function getWords(language: Language): string[] {
