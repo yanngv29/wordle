@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import "./index.css";
 
@@ -94,6 +94,7 @@ export function App({ language }: AppProps) {
   const [gameDate] = useState(new Date().toISOString().split("T")[0]);
   const [showQrCode, setShowQrCode] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState("");
+  const hasSavedRef = useRef<string | null>(null);
 
   const msgs = MESSAGES[language];
   const keyboardRows = language === "fr" ? KEYBOARD_ROWS_FR : KEYBOARD_ROWS_EN;
@@ -144,41 +145,53 @@ export function App({ language }: AppProps) {
     }
   }, [language, playerId]);
 
-  const startNewGame = async () => {
+  const startNewGame = async (forceRandom = false) => {
     try {
-      // Load today's game record (if exists)
-      const gameRecordResponse = await fetch(
-        `/api/game/today?playerId=${playerId}&lang=${language}`
-      );
-      const { gameRecord } = await gameRecordResponse.json();
+      // Clear saving ref for the new game
+      hasSavedRef.current = null;
 
-      // If game already played today, restore the state
-      if (gameRecord) {
-        setTargetWord(gameRecord.solution);
-        setGuesses(gameRecord.attempts);
-        setCurrentGuess("");
-        setGameState(gameRecord.won ? "WON" : "LOST");
-        setMessage("");
-        
-        // Restore used letters
-        const newUsedLetters: Record<string, Status> = {};
-        gameRecord.attempts.forEach((guess) => {
-          const statuses = getLetterStatuses(guess, gameRecord.solution);
-          guess.split("").forEach((char, i) => {
-            const status = statuses[i];
-            const currentStatus = newUsedLetters[char];
-            if (!currentStatus || status === "correct" || (status === "present" && currentStatus === "absent")) {
-              newUsedLetters[char] = status;
-            }
+      if (!forceRandom) {
+        // Load today's game record (if exists)
+        const gameRecordResponse = await fetch(
+          `/api/game/today?playerId=${playerId}&lang=${language}`
+        );
+        const { gameRecord } = await gameRecordResponse.json();
+
+        // If game already played today, restore the state
+        if (gameRecord) {
+          setTargetWord(gameRecord.solution);
+          setGuesses(gameRecord.attempts);
+          setCurrentGuess("");
+          setGameState(gameRecord.won ? "WON" : "LOST");
+          setMessage("");
+          
+          // Restore used letters
+          const newUsedLetters: Record<string, Status> = {};
+          gameRecord.attempts.forEach((guess) => {
+            const statuses = getLetterStatuses(guess, gameRecord.solution);
+            guess.split("").forEach((char, i) => {
+              const status = statuses[i];
+              const currentStatus = newUsedLetters[char];
+              if (!currentStatus || status === "correct" || (status === "present" && currentStatus === "absent")) {
+                newUsedLetters[char] = status;
+              }
+            });
           });
-        });
-        setUsedLetters(newUsedLetters);
-        return;
+          setUsedLetters(newUsedLetters);
+          // Mark as saved since it's a restored game
+          hasSavedRef.current = `${gameRecord.solution}-${gameRecord.attempts.length}`;
+          return;
+        }
       }
 
-      // Get daily word for today
-      const wordResponse = await fetch(`/api/daily-word?lang=${language}&date=${gameDate}`);
-      const { word } = await wordResponse.json();
+      // Get daily word for today or random if forced
+      const endpoint = forceRandom 
+        ? `/api/random-word?lang=${language}`
+        : `/api/daily-word?lang=${language}&date=${gameDate}`;
+      
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      const word = data.word;
       
       setTargetWord(word);
       setGuesses([]);
@@ -202,8 +215,10 @@ export function App({ language }: AppProps) {
 
   // Save game stats when game ends
   useEffect(() => {
-    if (gameState !== "PLAYING" && targetWord && playerId && playerStats) {
+    const gameId = `${targetWord}-${guesses.length}`;
+    if (gameState !== "PLAYING" && targetWord && playerId && playerStats && hasSavedRef.current !== gameId) {
       saveGameStats();
+      hasSavedRef.current = gameId;
     }
   }, [gameState, targetWord, playerId, playerStats, guesses, gameDate]);
 
@@ -617,7 +632,7 @@ export function App({ language }: AppProps) {
                 : `${msgs.lost} ${targetWord}`}
             </p>
             <button
-              onClick={startNewGame}
+              onClick={() => startNewGame(true)}
               className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 md:py-3 md:px-8 rounded-full transition-colors text-sm md:text-lg"
             >
               {msgs.newGame}
