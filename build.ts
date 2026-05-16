@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import plugin from "bun-plugin-tailwind";
 import { existsSync } from "fs";
-import { rm } from "fs/promises";
+import { rm, mkdir } from "fs/promises";
 import path from "path";
 
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
@@ -136,6 +136,19 @@ const result = await Bun.build({
 });
 
 const end = performance.now();
+
+// Copy static assets
+const assets = [...new Bun.Glob("**/*.{ico,png,svg,jpg,jpeg,gif,webp,woff,woff2,ttf,otf,eot,txt}").scanSync("src")];
+for (const asset of assets) {
+  const srcPath = path.resolve("src", asset);
+  const destPath = path.resolve(outdir, asset);
+  const destDir = path.dirname(destPath);
+  if (!existsSync(destDir)) {
+    await mkdir(destDir, { recursive: true });
+  }
+  await Bun.write(destPath, Bun.file(srcPath));
+  console.log(`📦 Copied asset: ${asset}`);
+}
 
 const outputTable = result.outputs.map(output => ({
   File: path.relative(process.cwd(), output.path),

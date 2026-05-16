@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Block AI crawlers if desired, but here we'll just be standard
+# User-agent: GPTBot
+# Disallow: /
+# User-agent: ChatGPT-User
+# Disallow: /
+# User-agent: CCBot
+# Disallow: /
+# User-agent: Google-Extended
+# Disallow: /
