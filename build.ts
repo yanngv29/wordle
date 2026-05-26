@@ -117,10 +117,11 @@ if (existsSync(outdir)) {
 
 const start = performance.now();
 
-const entrypoints = [...new Bun.Glob("**.html").scanSync("src")]
+const htmlFiles = [...new Bun.Glob("**.html").scanSync("src")]
   .map(a => path.resolve("src", a))
   .filter(dir => !dir.includes("node_modules"));
-console.log(`📄 Found ${entrypoints.length} HTML ${entrypoints.length === 1 ? "file" : "files"} to process\n`);
+const entrypoints = [path.resolve("src", "frontend.tsx")];
+console.log(`📄 Found ${htmlFiles.length} HTML ${htmlFiles.length === 1 ? "file" : "files"} to process\n`);
 
 const result = await Bun.build({
   entrypoints,
@@ -137,6 +138,26 @@ const result = await Bun.build({
   assetNames: "asset-[hash]",
   ...cliConfig,
 });
+
+const jsOutput = result.outputs.find(output => output.path.endsWith(".js") && !output.path.endsWith(".js.map"))?.path;
+const cssOutput = result.outputs.find(output => output.path.endsWith(".css") && !output.path.endsWith(".css.map"))?.path;
+const jsFilename = jsOutput ? path.basename(jsOutput) : "frontend.js";
+const cssFilename = cssOutput ? path.basename(cssOutput) : "";
+
+for (const htmlPath of htmlFiles) {
+  const htmlName = path.basename(htmlPath);
+  let htmlContent = await Bun.file(htmlPath).text();
+
+  if (cssFilename && !htmlContent.includes("<link rel='stylesheet'")) {
+    htmlContent = htmlContent.replace("</head>", `  <link rel='stylesheet' href='./${cssFilename}'>\n</head>`);
+  }
+
+  const scriptTag = `<script type='module' src='./frontend.tsx'></script>`;
+  htmlContent = htmlContent.replace(scriptTag, `<script type='module' src='./${jsFilename}'></script>`);
+
+  await Bun.write(path.resolve(outdir, htmlName), htmlContent);
+  console.log(`📄 Wrote HTML page: ${htmlName}`);
+}
 
 const end = performance.now();
 
