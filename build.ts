@@ -132,6 +132,9 @@ const result = await Bun.build({
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
   },
+  entryNames: "[name]-[hash]",
+  chunkNames: "chunk-[hash]",
+  assetNames: "asset-[hash]",
   ...cliConfig,
 });
 
