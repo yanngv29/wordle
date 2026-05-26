@@ -130,6 +130,7 @@ const result = await Bun.build({
   minify: true,
   target: "browser",
   sourcemap: "linked",
+  splitting: true,
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
   },
@@ -141,19 +142,42 @@ const result = await Bun.build({
 
 const jsOutput = result.outputs.find(output => output.path.endsWith(".js") && !output.path.endsWith(".js.map"))?.path;
 const cssOutput = result.outputs.find(output => output.path.endsWith(".css") && !output.path.endsWith(".css.map"))?.path;
-const jsFilename = jsOutput ? path.basename(jsOutput) : "frontend.js";
+
+console.log(`\n📌 All build outputs:`);
+result.outputs.forEach(output => {
+  console.log(`   ${path.basename(output.path)} (${output.kind})`);
+});
+
+let jsFilename = jsOutput ? path.basename(jsOutput) : "frontend.js";
 const cssFilename = cssOutput ? path.basename(cssOutput) : "";
+
+// Si pas de hash, ajouter un hash basé sur le contenu du fichier
+if (jsFilename === "frontend.js" && jsOutput) {
+  const fileContent = await Bun.file(jsOutput).text();
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(fileContent));
+  const hashHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 8);
+  const hashedName = `frontend-${hashHex}.js`;
+  const newPath = path.resolve(outdir, hashedName);
+  await Bun.write(newPath, fileContent);
+  jsFilename = hashedName;
+  console.log(`\n✏️  Renamed ${path.basename(jsOutput)} → ${hashedName}\n`);
+}
+
+console.log(`\n📌 Final files to use:`);
+console.log(`   JS: ${jsFilename}`);
+console.log(`   CSS: ${cssFilename || "(none)"}\n`);
+
 
 for (const htmlPath of htmlFiles) {
   const htmlName = path.basename(htmlPath);
   let htmlContent = await Bun.file(htmlPath).text();
 
-  if (cssFilename && !htmlContent.includes("<link rel='stylesheet'")) {
-    htmlContent = htmlContent.replace("</head>", `  <link rel='stylesheet' href='./${cssFilename}'>\n</head>`);
+  if (cssFilename && !htmlContent.includes("rel=")) {
+    htmlContent = htmlContent.replace("</head>", `  <link rel="stylesheet" href="./${cssFilename}">\n</head>`);
   }
 
-  const scriptTag = `<script type='module' src='./frontend.tsx'></script>`;
-  htmlContent = htmlContent.replace(scriptTag, `<script type='module' src='./${jsFilename}'></script>`);
+  const scriptTag = `<script type="module" src="./frontend.tsx"></script>`;
+  htmlContent = htmlContent.replace(scriptTag, `<script type="module" src="./${jsFilename}"></script>`);
 
   await Bun.write(path.resolve(outdir, htmlName), htmlContent);
   console.log(`📄 Wrote HTML page: ${htmlName}`);
