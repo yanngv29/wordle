@@ -172,10 +172,12 @@ for (const htmlPath of htmlFiles) {
   const htmlName = path.basename(htmlPath);
   let htmlContent = await Bun.file(htmlPath).text();
 
-  if (cssFilename && !htmlContent.includes("rel=")) {
-    htmlContent = htmlContent.replace("</head>", `  <link rel="stylesheet" href="./${cssFilename}">\n</head>`);
+  // Ajouter le lien CSS s'il n'existe pas déjà
+  if (cssFilename && !htmlContent.includes(cssFilename)) {
+    htmlContent = htmlContent.replace("</head>", `    <link rel="stylesheet" href="./${cssFilename}">\n  </head>`);
   }
 
+  // Remplacer le script frontend.tsx par le JS généré
   const scriptTag = `<script type="module" src="./frontend.tsx"></script>`;
   htmlContent = htmlContent.replace(scriptTag, `<script type="module" src="./${jsFilename}"></script>`);
 
