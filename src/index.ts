@@ -9,7 +9,7 @@ const distDir = path.join(import.meta.dir, "..", "dist");
 
 console.log(`📖 Dictionaries loaded at startup`);
 console.log(`💾 Initializing database...`);
-initializeDatabase();
+await initializeDatabase();
 console.log(`✓ Database initialized`);
 
 const server = serve({
@@ -56,7 +56,7 @@ const server = serve({
           return Response.json({ error: "Invalid UUID format" }, { status: 400 });
         }
 
-        createOrUpdatePlayerStats(playerId, stats);
+        await createOrUpdatePlayerStats(playerId, stats);
         return Response.json({ success: true });
       } catch (error) {
         console.error("Error saving player stats:", error);
@@ -74,7 +74,7 @@ const server = serve({
           return Response.json({ error: "Invalid game data" }, { status: 400 });
         }
 
-        saveGameRecord({ playerId, date, solution, attempts, won });
+        await saveGameRecord({ playerId, date, solution, attempts, won });
         return Response.json({ success: true });
       } catch (error) {
         console.error("Error saving game record:", error);
@@ -90,7 +90,7 @@ const server = serve({
         return Response.json({ error: "Invalid playerId" }, { status: 400 });
       }
 
-      const stats = getPlayerStats(playerId);
+      const stats = await getPlayerStats(playerId);
 
       if (!stats) {
         // Return default stats for new players
@@ -118,7 +118,7 @@ const server = serve({
         }
 
         const date = getTodayDate();
-        const gameRecord = getGameRecord(playerId, date);
+        const gameRecord = await getGameRecord(playerId, date);
 
         return Response.json({ gameRecord, date });
       } catch (error) {
