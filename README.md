@@ -162,6 +162,7 @@ dist/                  # Fichiers compilés (généré par `bun run build`)
   ├── index.html       # HTML français compilé
   ├── en.html         # HTML anglais compilé
   └── chunk-*.js      # JavaScript bundlé
+```
 
 ### Crédits et Contributeurs
 
