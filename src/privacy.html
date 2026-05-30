@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Politique de Confidentialité - Le Mot</title>
+    <link rel="icon" type="image/png" href="./favicon.png">
+    <style>
+        :root {
+            --color-background: #121213;
+            --color-text: #ffffff;
+            --color-accent: #6aaa64;
+            --color-border: #3a3a3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--color-background);
+            color: var(--color-text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-accent);
+        }
+
+        header p {
+            color: var(--color-border);
+            font-size: 0.95rem;
+        }
+
+        nav {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        nav a, .lang-switcher {
+            padding: 0.5rem 1rem;
+            background-color: var(--color-border);
+            color: var(--color-text);
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        nav a:hover, .lang-switcher:hover {
+            background-color: var(--color-accent);
+        }
+
+        nav a.active, .lang-switcher.active {
+            background-color: var(--color-accent);
+        }
+
+        .content {
+            line-height: 1.8;
+        }
+
+        .content h2 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+            color: var(--color-accent);
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .content h3 {
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.5rem 0;
+            color: var(--color-text);
+        }
+
+        .content p, .content li {
+            margin-bottom: 1rem;
+            color: #e5e5e5;
+        }
+
+        .content ul, .content ol {
+            margin-left: 1.5rem;
+        }
+
+        .content a {
+            color: var(--color-accent);
+            text-decoration: none;
+        }
+
+        .content a:hover {
+            text-decoration: underline;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--color-border);
+            text-align: center;
+            color: var(--color-border);
+            font-size: 0.9rem;
+        }
+
+        .lang-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .language-content {
+            display: none;
+        }
+
+        .language-content.active {
+            display: block;
+        }
+
+        .highlight {
+            background-color: rgba(106, 170, 100, 0.1);
+            padding: 1rem;
+            border-left: 3px solid var(--color-accent);
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content h2 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Politique de Confidentialité</h1>
+            <p>Privacy Policy</p>
+        </header>
+
+        <nav>
+            <a href="/">Jeu / Game</a>
+            <a href="/terms">Conditions</a>
+            <a href="/privacy" class="active">Confidentialité</a>
+        </nav>
+
+        <div class="lang-tabs">
+            <button class="lang-switcher active" onclick="switchLanguage('fr')">Français</button>
+            <button class="lang-switcher" onclick="switchLanguage('en')">English</button>
+        </div>
+
+        <div class="content">
+            <!-- FRENCH VERSION -->
+            <div id="fr-content" class="language-content active">
+                <div class="section">
+                    <h2>Politique de Confidentialité</h2>
+                    <p><strong>Dernière mise à jour : 30 mai 2026</strong></p>
+
+                    <p>Nous prenons votre confidentialité très au sérieux. Cette Politique de Confidentialité décrit comment nous collectons, utilisons, et protégeons vos données personnelles lors de votre utilisation de <strong>Le Mot</strong>.</p>
+                </div>
+
+                <div class="section">
+                    <h3>1. Données Collectées</h3>
+                    <p>Nous collectons un minimum de données pour assurer le fonctionnement du jeu et votre expérience utilisateur :</p>
+                    <ul>
+                        <li><strong>Identifiant Joueur (playerId)</strong> : Un identifiant unique généré aléatoirement (UUID) ou fourni par Discord lors de l'authentification Discord (Discord Snowflake) ;</li>
+                        <li><strong>Statistiques de Jeu</strong> : Nombre de parties jouées, parties gagnées, série actuelle, série maximale, date de dernière partie ;</li>
+                        <li><strong>Historique des Parties</strong> : Date, mot solution, tentatives et résultat (gagné/perdu) de chaque partie jouée.</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>2. Utilisation des Données</h3>
+                    <p>Vos données sont utilisées exclusivement pour :</p>
+                    <ul>
+                        <li>Sauvegarder et afficher vos statistiques de jeu ;</li>
+                        <li>Maintenir votre historique de parties ;</li>
+                        <li>Améliorer votre expérience utilisateur ;</li>
+                        <li>Assurer le bon fonctionnement du jeu (statistiques, synchronisation entre appareils).</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>3. Données NON Collectées</h3>
+                    <div class="highlight">
+                        <p><strong>🛡️ Votre vie privée est importante pour nous.</strong></p>
+                        <p>Nous ne collectons <strong>JAMAIS</strong> :</p>
+                        <ul>
+                            <li>Vos informations personnelles identifiables (nom, email, adresse, etc.) ;</li>
+                            <li>Les traceurs publicitaires ou cookies tiers ;</li>
+                            <li>Vos données de géolocalisation ;</li>
+                            <li>Vos informations bancaires ou de paiement ;</li>
+                            <li>Des données pour ciblage publicitaire ;</li>
+                            <li>Vos interactions détaillées hors du jeu.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>4. Authentification Discord</h3>
+                    <p>Si vous choisissez de connecter votre compte Discord :</p>
+                    <ul>
+                        <li>Votre Discord Snowflake (ID utilisateur Discord) sera utilisé comme identifiant unique ;</li>
+                        <li>Nous recevons uniquement votre ID utilisateur Discord, pas vos identifiants de connexion ;</li>
+                        <li>Vous pouvez révoquer l'accès à tout moment dans les paramètres Discord.</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>5. Sécurité des Données</h3>
+                    <p>Vos données sont stockées de manière sécurisée :</p>
+                    <ul>
+                        <li>Base de données chiffrée en transit (HTTPS) ;</li>
+                        <li>Stockage sécurisé sur des serveurs fiables ;</li>
+                        <li>Accès restreint au personnel autorisé ;</li>
+                        <li>Protection contre les accès non autorisés.</li>
+                    </ul>
+                    <p>Cependant, aucun système de sécurité n'est 100% impénétrable. Nous ne pouvons pas garantir une sécurité absolue.</p>
+                </div>
+
+                <div class="section">
+                    <h3>6. Droits des Utilisateurs (RGPD)</h3>
+                    <p>Conformément au Règlement Général sur la Protection des Données (RGPD), vous avez le droit de :</p>
+                    <ul>
+                        <li><strong>Accès</strong> : Demander une copie de vos données personnelles ;</li>
+                        <li><strong>Rectification</strong> : Corriger vos données si elles sont inexactes ;</li>
+                        <li><strong>Suppression</strong> : Demander la suppression de vos données (« droit à l'oubli ») ;</li>
+                        <li><strong>Portabilité</strong> : Recevoir vos données dans un format structuré et portable ;</li>
+                        <li><strong>Opposition</strong> : Vous opposer à certains traitements de vos données.</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>7. Suppression des Données</h3>
+                    <p>Vous pouvez demander la suppression de votre compte et de toutes vos données associées à tout moment. Une fois supprimées, vos données ne peuvent pas être récupérées.</p>
+                </div>
+
+                <div class="section">
+                    <h3>8. Modifications de la Politique</h3>
+                    <p>Nous nous réservons le droit de modifier cette Politique de Confidentialité. Les modifications entrent en vigueur immédiatement. Votre utilisation continue du jeu après les modifications constitue votre acceptation de la nouvelle politique.</p>
+                </div>
+
+                <div class="section">
+                    <h3>9. Contact & Demandes</h3>
+                    <p>Pour toute question relative à cette Politique de Confidentialité, ou pour exercer vos droits RGPD, veuillez nous contacter :</p>
+                    <ul>
+                        <li>Via Discord (DM ou serveur) ;</li>
+                        <li>Par email (adresse fournie sur demande) ;</li>
+                        <li>Via le formulaire de contact sur le site.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ENGLISH VERSION -->
+            <div id="en-content" class="language-content">
+                <div class="section">
+                    <h2>Privacy Policy</h2>
+                    <p><strong>Last updated: May 30, 2026</strong></p>
+
+                    <p>We take your privacy very seriously. This Privacy Policy describes how we collect, use, and protect your personal data when you use <strong>Le Mot</strong>.</p>
+                </div>
+
+                <div class="section">
+                    <h3>1. Data Collected</h3>
+                    <p>We collect minimal data to ensure the game functions and your user experience is optimized:</p>
+                    <ul>
+                        <li><strong>Player Identifier (playerId)</strong> : A unique randomly generated identifier (UUID) or provided by Discord upon Discord authentication (Discord Snowflake) ;</li>
+                        <li><strong>Game Statistics</strong> : Number of games played, games won, current streak, maximum streak, last played date ;</li>
+                        <li><strong>Game History</strong> : Date, solution word, attempts, and result (won/lost) of each game played.</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>2. Use of Data</h3>
+                    <p>Your data is used exclusively for:</p>
+                    <ul>
+                        <li>Saving and displaying your game statistics ;</li>
+                        <li>Maintaining your game history ;</li>
+                        <li>Improving your user experience ;</li>
+                        <li>Ensuring the game functions properly (statistics, sync across devices).</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>3. Data NOT Collected</h3>
+                    <div class="highlight">
+                        <p><strong>🛡️ Your privacy is important to us.</strong></p>
+                        <p>We <strong>NEVER</strong> collect:</p>
+                        <ul>
+                            <li>Your personally identifiable information (name, email, address, etc.) ;</li>
+                            <li>Advertising trackers or third-party cookies ;</li>
+                            <li>Your geolocation data ;</li>
+                            <li>Your banking or payment information ;</li>
+                            <li>Data for advertising targeting ;</li>
+                            <li>Your detailed interactions outside the game.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>4. Discord Authentication</h3>
+                    <p>If you choose to connect your Discord account:</p>
+                    <ul>
+                        <li>Your Discord Snowflake (Discord user ID) will be used as a unique identifier ;</li>
+                        <li>We only receive your Discord user ID, not your login credentials ;</li>
+                        <li>You can revoke access at any time in your Discord settings.</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>5. Data Security</h3>
+                    <p>Your data is stored securely:</p>
+                    <ul>
+                        <li>Database encrypted in transit (HTTPS) ;</li>
+                        <li>Secure storage on trusted servers ;</li>
+                        <li>Access restricted to authorized personnel ;</li>
+                        <li>Protection against unauthorized access.</li>
+                    </ul>
+                    <p>However, no security system is 100% impenetrable. We cannot guarantee absolute security.</p>
+                </div>
+
+                <div class="section">
+                    <h3>6. User Rights (GDPR)</h3>
+                    <p>In accordance with the General Data Protection Regulation (GDPR), you have the right to:</p>
+                    <ul>
+                        <li><strong>Access</strong> : Request a copy of your personal data ;</li>
+                        <li><strong>Rectification</strong> : Correct your data if it is inaccurate ;</li>
+                        <li><strong>Deletion</strong> : Request deletion of your data (« right to be forgotten ») ;</li>
+                        <li><strong>Portability</strong> : Receive your data in a structured and portable format ;</li>
+                        <li><strong>Objection</strong> : Object to certain processing of your data.</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>7. Data Deletion</h3>
+                    <p>You can request deletion of your account and all associated data at any time. Once deleted, your data cannot be recovered.</p>
+                </div>
+
+                <div class="section">
+                    <h3>8. Policy Changes</h3>
+                    <p>We reserve the right to modify this Privacy Policy. Changes take effect immediately. Your continued use of the game after changes constitutes your acceptance of the new policy.</p>
+                </div>
+
+                <div class="section">
+                    <h3>9. Contact & Requests</h3>
+                    <p>For any questions regarding this Privacy Policy, or to exercise your GDPR rights, please contact us:</p>
+                    <ul>
+                        <li>Via Discord (DM or server) ;</li>
+                        <li>By email (address provided upon request) ;</li>
+                        <li>Via the contact form on the website.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Le Mot. Tous droits réservés. | <a href="/terms">Conditions d'Utilisation</a></p>
+        </footer>
+    </div>
+
+    <script>
+        function switchLanguage(lang) {
+            document.getElementById('fr-content').classList.remove('active');
+            document.getElementById('en-content').classList.remove('active');
+            document.getElementById(lang + '-content').classList.add('active');
+
+            document.querySelectorAll('.lang-switcher').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conditions d'Utilisation - Le Mot</title>
+    <link rel="icon" type="image/png" href="./favicon.png">
+    <style>
+        :root {
+            --color-background: #121213;
+            --color-text: #ffffff;
+            --color-accent: #6aaa64;
+            --color-border: #3a3a3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--color-background);
+            color: var(--color-text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-accent);
+        }
+
+        header p {
+            color: var(--color-border);
+            font-size: 0.95rem;
+        }
+
+        nav {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        nav a, .lang-switcher {
+            padding: 0.5rem 1rem;
+            background-color: var(--color-border);
+            color: var(--color-text);
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        nav a:hover, .lang-switcher:hover {
+            background-color: var(--color-accent);
+        }
+
+        nav a.active, .lang-switcher.active {
+            background-color: var(--color-accent);
+        }
+
+        .content {
+            line-height: 1.8;
+        }
+
+        .content h2 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+            color: var(--color-accent);
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .content h3 {
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.5rem 0;
+            color: var(--color-text);
+        }
+
+        .content p, .content li {
+            margin-bottom: 1rem;
+            color: #e5e5e5;
+        }
+
+        .content ul, .content ol {
+            margin-left: 1.5rem;
+        }
+
+        .content a {
+            color: var(--color-accent);
+            text-decoration: none;
+        }
+
+        .content a:hover {
+            text-decoration: underline;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--color-border);
+            text-align: center;
+            color: var(--color-border);
+            font-size: 0.9rem;
+        }
+
+        .lang-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .language-content {
+            display: none;
+        }
+
+        .language-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content h2 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Conditions d'Utilisation</h1>
+            <p>Terms of Service</p>
+        </header>
+
+        <nav>
+            <a href="/">Jeu / Game</a>
+            <a href="/terms" class="active">Conditions</a>
+            <a href="/privacy">Confidentialité</a>
+        </nav>
+
+        <div class="lang-tabs">
+            <button class="lang-switcher active" onclick="switchLanguage('fr')">Français</button>
+            <button class="lang-switcher" onclick="switchLanguage('en')">English</button>
+        </div>
+
+        <div class="content">
+            <!-- FRENCH VERSION -->
+            <div id="fr-content" class="language-content active">
+                <div class="section">
+                    <h2>Conditions d'Utilisation</h2>
+                    <p><strong>Dernière mise à jour : 30 mai 2026</strong></p>
+
+                    <p>Bienvenue sur <strong>Le Mot</strong> (« le Jeu »). Ces conditions d'utilisation (« Conditions ») régissent votre accès et votre utilisation du jeu Wordle français.</p>
+                </div>
+
+                <div class="section">
+                    <h3>1. Acceptation des Conditions</h3>
+                    <p>En accédant et en utilisant le Jeu, vous acceptez d'être lié par ces Conditions. Si vous n'acceptez pas ces Conditions, veuillez ne pas utiliser le Jeu.</p>
+                </div>
+
+                <div class="section">
+                    <h3>2. Description du Jeu</h3>
+                    <p><strong>Le Mot</strong> est une implémentation récréative du concept Wordle en français et en anglais. Le jeu consiste à deviner un mot mystère en un nombre limé de tentatives, avec retours visuels sur la pertinence des lettres proposées.</p>
+                </div>
+
+                <div class="section">
+                    <h3>3. Utilisation Acceptable</h3>
+                    <p>Vous acceptez d'utiliser le Jeu uniquement à des fins légales et conformes aux présentes Conditions. Vous ne devez pas :</p>
+                    <ul>
+                        <li>Accéder ou utiliser le Jeu de manière contraire à la loi ou aux règlements en vigueur ;</li>
+                        <li>Tenter de contourner les mécanismes de sécurité ou de chauffage du Jeu ;</li>
+                        <li>Utiliser des scripts, robots ou autres outils automatisés pour accéder au Jeu ;</li>
+                        <li>Harceler, menacer ou intimider d'autres utilisateurs ;</li>
+                        <li>Transmettre des virus, logiciels malveillants ou tout contenu dommageable ;</li>
+                        <li>Partager, revendre ou redistribuer le Jeu ou tout son contenu.</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>4. Propriété Intellectuelle</h3>
+                    <p>Le Jeu et tout son contenu, y compris les graphiques, le texte, les logo et la structure, sont protégés par les droits d'auteur. Le concept Wordle est inspiré du jeu éponyme créé par Josh Wardle.</p>
+                </div>
+
+                <div class="section">
+                    <h3>5. Limitation de Responsabilité</h3>
+                    <p>Le Jeu est fourni « tel quel » sans garanties de toute sorte, explicites ou implicites. Nous ne garantissons pas :</p>
+                    <ul>
+                        <li>L'absence d'interruption ou d'erreurs dans le Jeu ;</li>
+                        <li>L'exactitude des données ou statistiques présentées ;</li>
+                        <li>La compatibilité avec tous les appareils ou navigateurs ;</li>
+                        <li>La sécurité absolue de vos données.</li>
+                    </ul>
+                    <p>En aucun cas, nous ne serons responsables des dommages indirects, spéciaux ou consécutifs découlant de votre utilisation du Jeu.</p>
+                </div>
+
+                <div class="section">
+                    <h3>6. Droits d'Accès et d'Utilisation</h3>
+                    <p>Vous êtes accordé un droit d'accès personnel, non transferable et limité à utiliser le Jeu à titre récréatif uniquement. Toute autre utilisation est strictement interdite.</p>
+                </div>
+
+                <div class="section">
+                    <h3>7. Modification des Conditions</h3>
+                    <p>Nous nous réservons le droit de modifier ces Conditions à tout moment. Les modifications entrent en vigueur immédiatement. Votre utilisation continue du Jeu après les modifications constitue votre acceptation des nouvelles Conditions.</p>
+                </div>
+
+                <div class="section">
+                    <h3>8. Résiliation</h3>
+                    <p>Nous nous réservons le droit de suspendre ou de résilier votre accès au Jeu à tout moment, sans préavis, pour non-respect de ces Conditions.</p>
+                </div>
+
+                <div class="section">
+                    <h3>9. Droit Applicable</h3>
+                    <p>Ces Conditions sont régies par la loi française. Tout litige sera résolu exclusivement par les tribunaux français compétents.</p>
+                </div>
+
+                <div class="section">
+                    <h3>10. Contact</h3>
+                    <p>Pour toute question relative à ces Conditions, veuillez nous contacter via Discord ou par email.</p>
+                </div>
+            </div>
+
+            <!-- ENGLISH VERSION -->
+            <div id="en-content" class="language-content">
+                <div class="section">
+                    <h2>Terms of Service</h2>
+                    <p><strong>Last updated: May 30, 2026</strong></p>
+
+                    <p>Welcome to <strong>Le Mot</strong> (« the Game »). These Terms of Service (« Terms ») govern your access and use of the French Wordle game.</p>
+                </div>
+
+                <div class="section">
+                    <h3>1. Acceptance of Terms</h3>
+                    <p>By accessing and using the Game, you agree to be bound by these Terms. If you do not agree to these Terms, please do not use the Game.</p>
+                </div>
+
+                <div class="section">
+                    <h3>2. Game Description</h3>
+                    <p><strong>Le Mot</strong> is a recreational implementation of the Wordle concept in French and English. The game consists of guessing a mystery word in a limited number of attempts, with visual feedback on the relevance of the proposed letters.</p>
+                </div>
+
+                <div class="section">
+                    <h3>3. Acceptable Use</h3>
+                    <p>You agree to use the Game only for legal purposes and in compliance with these Terms. You must not:</p>
+                    <ul>
+                        <li>Access or use the Game in violation of any law or regulation;</li>
+                        <li>Attempt to bypass the security mechanisms of the Game;</li>
+                        <li>Use scripts, bots, or other automated tools to access the Game;</li>
+                        <li>Harass, threaten, or intimidate other users;</li>
+                        <li>Transmit viruses, malware, or any harmful content;</li>
+                        <li>Share, resell, or redistribute the Game or any of its content.</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>4. Intellectual Property</h3>
+                    <p>The Game and all its content, including graphics, text, logos, and structure, are protected by copyright. The Wordle concept is inspired by the game created by Josh Wardle.</p>
+                </div>
+
+                <div class="section">
+                    <h3>5. Limitation of Liability</h3>
+                    <p>The Game is provided « as is » without warranties of any kind, express or implied. We do not guarantee:</p>
+                    <ul>
+                        <li>The absence of interruptions or errors in the Game;</li>
+                        <li>The accuracy of data or statistics presented;</li>
+                        <li>Compatibility with all devices or browsers;</li>
+                        <li>Absolute security of your data.</li>
+                    </ul>
+                    <p>In no event shall we be liable for indirect, special, or consequential damages arising from your use of the Game.</p>
+                </div>
+
+                <div class="section">
+                    <h3>6. Rights of Access and Use</h3>
+                    <p>You are granted a personal, non-transferable, and limited right to use the Game for recreational purposes only. Any other use is strictly prohibited.</p>
+                </div>
+
+                <div class="section">
+                    <h3>7. Modification of Terms</h3>
+                    <p>We reserve the right to modify these Terms at any time. Modifications take effect immediately. Your continued use of the Game after modifications constitutes your acceptance of the new Terms.</p>
+                </div>
+
+                <div class="section">
+                    <h3>8. Termination</h3>
+                    <p>We reserve the right to suspend or terminate your access to the Game at any time, without notice, for violation of these Terms.</p>
+                </div>
+
+                <div class="section">
+                    <h3>9. Governing Law</h3>
+                    <p>These Terms are governed by French law. Any dispute shall be resolved exclusively by the competent French courts.</p>
+                </div>
+
+                <div class="section">
+                    <h3>10. Contact</h3>
+                    <p>For any questions regarding these Terms, please contact us via Discord or email.</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Le Mot. Tous droits réservés. | <a href="/privacy">Politique de Confidentialité</a></p>
+        </footer>
+    </div>
+
+    <script>
+        function switchLanguage(lang) {
+            document.getElementById('fr-content').classList.remove('active');
+            document.getElementById('en-content').classList.remove('active');
+            document.getElementById(lang + '-content').classList.add('active');
+
+            document.querySelectorAll('.lang-switcher').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

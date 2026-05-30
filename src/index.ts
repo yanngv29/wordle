@@ -245,10 +245,16 @@ const server = serve({
 
     // Route /en to dist/en.html
     // Route / and /fr to dist/index.html
+    // Route /terms to dist/terms.html
+    // Route /privacy to dist/privacy.html
     if (pathname === "/" || pathname === "/fr") {
       pathname = "/index.html";
     } else if (pathname === "/en" || pathname === "/en/") {
       pathname = "/en.html";
+    } else if (pathname === "/terms") {
+      pathname = "/terms.html";
+    } else if (pathname === "/privacy") {
+      pathname = "/privacy.html";
     }
 
     // Remove leading slash for file path
