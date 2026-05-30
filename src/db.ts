@@ -1,117 +1,37 @@
-import { Database } from "bun:sqlite";
-import path from "path";
+import { SQLiteProvider } from "./db/sqlite";
+import { MongoDBProvider } from "./db/mongo";
+import { DatabaseProvider, PlayerStats, GameRecord } from "./db/types";
 
-const dbPath = path.join(import.meta.dir, "..", "wordle.db");
+export type { PlayerStats, GameRecord };
 
-export const db = new Database(dbPath);
+let provider: DatabaseProvider;
 
-// Initialize database schema
-export function initializeDatabase() {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS players (
-      playerId TEXT PRIMARY KEY,
-      gamesPlayed INTEGER DEFAULT 0,
-      gamesWon INTEGER DEFAULT 0,
-      currentStreak INTEGER DEFAULT 0,
-      maxStreak INTEGER DEFAULT 0,
-      lastPlayedDate TEXT,
-      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
-    );
+const mongoUri = process.env.MONGODB_URI;
 
-    CREATE TABLE IF NOT EXISTS games (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      playerId TEXT NOT NULL,
-      date TEXT NOT NULL,
-      solution TEXT NOT NULL,
-      attempts TEXT NOT NULL,
-      won INTEGER NOT NULL,
-      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (playerId) REFERENCES players(playerId),
-      UNIQUE(playerId, date)
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_games_playerId ON games(playerId);
-    CREATE INDEX IF NOT EXISTS idx_games_date ON games(date);
-  `);
+if (mongoUri) {
+  console.log("💾 Database: Selecting MongoDB provider");
+  provider = new MongoDBProvider();
+} else {
+  console.log("💾 Database: Selecting SQLite provider");
+  provider = new SQLiteProvider();
 }
 
-export interface PlayerStats {
-  playerId: string;
-  gamesPlayed: number;
-  gamesWon: number;
-  currentStreak: number;
-  maxStreak: number;
-  lastPlayedDate: string | null;
+export async function initializeDatabase(): Promise<void> {
+  await provider.initialize();
 }
 
-export interface GameRecord {
-  playerId: string;
-  date: string;
-  solution: string;
-  attempts: string[];
-  won: boolean;
+export async function getPlayerStats(playerId: string): Promise<PlayerStats | null> {
+  return await provider.getPlayerStats(playerId);
 }
 
-export function getPlayerStats(playerId: string): PlayerStats | null {
-  const stmt = db.prepare("SELECT * FROM players WHERE playerId = ?");
-  return stmt.get(playerId) as PlayerStats | null;
+export async function createOrUpdatePlayerStats(playerId: string, stats: Partial<PlayerStats>): Promise<void> {
+  await provider.createOrUpdatePlayerStats(playerId, stats);
 }
 
-export function createOrUpdatePlayerStats(playerId: string, stats: Partial<PlayerStats>) {
-  const existing = getPlayerStats(playerId);
-
-  if (!existing) {
-    const stmt = db.prepare(`
-      INSERT INTO players (playerId, gamesPlayed, gamesWon, currentStreak, maxStreak, lastPlayedDate)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    stmt.run(
-      playerId,
-      stats.gamesPlayed || 0,
-      stats.gamesWon || 0,
-      stats.currentStreak || 0,
-      stats.maxStreak || 0,
-      stats.lastPlayedDate || null
-    );
-  } else {
-    const stmt = db.prepare(`
-      UPDATE players
-      SET gamesPlayed = ?, gamesWon = ?, currentStreak = ?, maxStreak = ?, lastPlayedDate = ?, updatedAt = CURRENT_TIMESTAMP
-      WHERE playerId = ?
-    `);
-    stmt.run(
-      stats.gamesPlayed !== undefined ? stats.gamesPlayed : existing.gamesPlayed,
-      stats.gamesWon !== undefined ? stats.gamesWon : existing.gamesWon,
-      stats.currentStreak !== undefined ? stats.currentStreak : existing.currentStreak,
-      stats.maxStreak !== undefined ? stats.maxStreak : existing.maxStreak,
-      stats.lastPlayedDate !== undefined ? stats.lastPlayedDate : existing.lastPlayedDate,
-      playerId
-    );
-  }
+export async function saveGameRecord(record: GameRecord): Promise<void> {
+  await provider.saveGameRecord(record);
 }
 
-export function saveGameRecord(record: GameRecord) {
-  const stmt = db.prepare(`
-    INSERT OR REPLACE INTO games (playerId, date, solution, attempts, won)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-
-  const attemptsJson = JSON.stringify(record.attempts);
-  stmt.run(record.playerId, record.date, record.solution, attemptsJson, record.won ? 1 : 0);
-}
-
-export function getGameRecord(playerId: string, date: string): GameRecord | null {
-  const stmt = db.prepare("SELECT * FROM games WHERE playerId = ? AND date = ?");
-  const result = stmt.get(playerId, date) as any;
-
-  if (!result) return null;
-
-  return {
-    playerId: result.playerId,
-    date: result.date,
-    solution: result.solution,
-    attempts: JSON.parse(result.attempts),
-    won: result.won === 1,
-  };
+export async function getGameRecord(playerId: string, date: string): Promise<GameRecord | null> {
+  return await provider.getGameRecord(playerId, date);
 }

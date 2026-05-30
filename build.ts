@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import plugin from "bun-plugin-tailwind";
 import { existsSync } from "fs";
-import { rm } from "fs/promises";
+import { rm, mkdir } from "fs/promises";
 import path from "path";
 
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
@@ -117,10 +117,11 @@ if (existsSync(outdir)) {
 
 const start = performance.now();
 
-const entrypoints = [...new Bun.Glob("**.html").scanSync("src")]
+const htmlFiles = [...new Bun.Glob("**.html").scanSync("src")]
   .map(a => path.resolve("src", a))
   .filter(dir => !dir.includes("node_modules"));
-console.log(`📄 Found ${entrypoints.length} HTML ${entrypoints.length === 1 ? "file" : "files"} to process\n`);
+const entrypoints = [path.resolve("src", "frontend.tsx")];
+console.log(`📄 Found ${htmlFiles.length} HTML ${htmlFiles.length === 1 ? "file" : "files"} to process\n`);
 
 const result = await Bun.build({
   entrypoints,
@@ -129,13 +130,75 @@ const result = await Bun.build({
   minify: true,
   target: "browser",
   sourcemap: "linked",
+  splitting: true,
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
   },
+  entryNames: "[name]-[hash]",
+  chunkNames: "chunk-[hash]",
+  assetNames: "asset-[hash]",
   ...cliConfig,
 });
 
+const jsOutput = result.outputs.find(output => output.path.endsWith(".js") && !output.path.endsWith(".js.map"))?.path;
+const cssOutput = result.outputs.find(output => output.path.endsWith(".css") && !output.path.endsWith(".css.map"))?.path;
+
+console.log(`\n📌 All build outputs:`);
+result.outputs.forEach(output => {
+  console.log(`   ${path.basename(output.path)} (${output.kind})`);
+});
+
+let jsFilename = jsOutput ? path.basename(jsOutput) : "frontend.js";
+const cssFilename = cssOutput ? path.basename(cssOutput) : "";
+
+// Si pas de hash, ajouter un hash basé sur le contenu du fichier
+if (jsFilename === "frontend.js" && jsOutput) {
+  const fileContent = await Bun.file(jsOutput).text();
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(fileContent));
+  const hashHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 8);
+  const hashedName = `frontend-${hashHex}.js`;
+  const newPath = path.resolve(outdir, hashedName);
+  await Bun.write(newPath, fileContent);
+  jsFilename = hashedName;
+  console.log(`\n✏️  Renamed ${path.basename(jsOutput)} → ${hashedName}\n`);
+}
+
+console.log(`\n📌 Final files to use:`);
+console.log(`   JS: ${jsFilename}`);
+console.log(`   CSS: ${cssFilename || "(none)"}\n`);
+
+
+for (const htmlPath of htmlFiles) {
+  const htmlName = path.basename(htmlPath);
+  let htmlContent = await Bun.file(htmlPath).text();
+
+  // Ajouter le lien CSS s'il n'existe pas déjà
+  if (cssFilename && !htmlContent.includes(cssFilename)) {
+    htmlContent = htmlContent.replace("</head>", `    <link rel="stylesheet" href="./${cssFilename}">\n  </head>`);
+  }
+
+  // Remplacer le script frontend.tsx par le JS généré
+  const scriptTag = `<script type="module" src="./frontend.tsx"></script>`;
+  htmlContent = htmlContent.replace(scriptTag, `<script type="module" src="./${jsFilename}"></script>`);
+
+  await Bun.write(path.resolve(outdir, htmlName), htmlContent);
+  console.log(`📄 Wrote HTML page: ${htmlName}`);
+}
+
 const end = performance.now();
+
+// Copy static assets
+const assets = [...new Bun.Glob("**/*.{ico,png,svg,jpg,jpeg,gif,webp,woff,woff2,ttf,otf,eot,txt}").scanSync("src")];
+for (const asset of assets) {
+  const srcPath = path.resolve("src", asset);
+  const destPath = path.resolve(outdir, asset);
+  const destDir = path.dirname(destPath);
+  if (!existsSync(destDir)) {
+    await mkdir(destDir, { recursive: true });
+  }
+  await Bun.write(destPath, Bun.file(srcPath));
+  console.log(`📦 Copied asset: ${asset}`);
+}
 
 const outputTable = result.outputs.map(output => ({
   File: path.relative(process.cwd(), output.path),
