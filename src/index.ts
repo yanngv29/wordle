@@ -3,6 +3,7 @@ import { getRandomWord, getWords } from "./dictionaries";
 import { initializeDatabase, getPlayerStats, createOrUpdatePlayerStats, saveGameRecord, getGameRecord } from "./db";
 import { getDailyWord, getTodayDate } from "./dailyWord";
 import path from "path";
+import { verifyDiscordSignature } from "./discord/verify";
 
 const port = parseInt(process.env.PORT || "3000", 10);
 const distDir = path.join(import.meta.dir, "..", "dist");
@@ -50,10 +51,11 @@ const server = serve({
           return Response.json({ error: "Invalid playerId" }, { status: 400 });
         }
 
-        // Basic UUID format validation
+        // Basic UUID or Discord Snowflake format validation
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (!uuidRegex.test(playerId)) {
-          return Response.json({ error: "Invalid UUID format" }, { status: 400 });
+        const discordRegex = /^\d{17,21}$/;
+        if (!uuidRegex.test(playerId) && !discordRegex.test(playerId)) {
+          return Response.json({ error: "Invalid playerId format" }, { status: 400 });
         }
 
         await createOrUpdatePlayerStats(playerId, stats);
@@ -123,6 +125,117 @@ const server = serve({
         return Response.json({ gameRecord, date });
       } catch (error) {
         console.error("Error fetching game record:", error);
+        return Response.json({ error: "Internal server error" }, { status: 500 });
+      }
+    }
+
+    // Discord API config endpoint
+    if (url.pathname === "/api/discord/config" && req.method === "GET") {
+      return Response.json({
+        clientId: process.env.DISCORD_CLIENT_ID || "",
+      });
+    }
+
+    // Discord OAuth2 token exchange endpoint
+    if (url.pathname === "/api/discord/auth" && req.method === "POST") {
+      try {
+        const body = await req.json() as any;
+        const { code } = body;
+        if (!code) {
+          return Response.json({ error: "Missing code" }, { status: 400 });
+        }
+
+        const clientId = process.env.DISCORD_CLIENT_ID;
+        const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+
+        if (!clientId || !clientSecret) {
+          return Response.json({ error: "Discord credentials are not configured on the server" }, { status: 500 });
+        }
+
+        const response = await fetch("https://discord.com/api/oauth2/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            grant_type: "authorization_code",
+            code,
+          }),
+        });
+
+        const data = await response.json() as any;
+        if (data.error) {
+          console.error("Discord token exchange error:", data);
+          return Response.json({ error: data.error_description || "Token exchange failed" }, { status: 400 });
+        }
+
+        return Response.json({
+          access_token: data.access_token,
+        });
+      } catch (error) {
+        console.error("Error in /api/discord/auth:", error);
+        return Response.json({ error: "Internal server error" }, { status: 500 });
+      }
+    }
+
+    // Discord Bot interactions webhook endpoint
+    if (url.pathname === "/api/discord/interactions" && req.method === "POST") {
+      try {
+        const signature = req.headers.get("x-signature-ed25519") || "";
+        const timestamp = req.headers.get("x-signature-timestamp") || "";
+        const rawBody = await req.text();
+
+        const publicKey = process.env.DISCORD_PUBLIC_KEY;
+        if (!publicKey) {
+          return Response.json({ error: "Discord public key not configured" }, { status: 500 });
+        }
+
+        const isVerified = verifyDiscordSignature(rawBody, signature, timestamp, publicKey);
+        if (!isVerified) {
+          return new Response("Invalid signature", { status: 401 });
+        }
+
+        const interaction = JSON.parse(rawBody);
+
+        // Type 1: Ping
+        if (interaction.type === 1) {
+          return Response.json({ type: 1 });
+        }
+
+        // Type 2: ApplicationCommand (Slash command)
+        if (interaction.type === 2) {
+          const commandName = interaction.data.name;
+
+          if (commandName === "play" || commandName === "wordle") {
+            const clientId = process.env.DISCORD_CLIENT_ID || "";
+            return Response.json({
+              type: 4, // ChannelMessageWithSource
+              data: {
+                content: "🎮 **Prêt à jouer au Wordle ?** Cliquez sur le bouton ci-dessous pour lancer le jeu directement sous forme d'Activité Discord !",
+                components: [
+                  {
+                    type: 1, // ActionRow
+                    components: [
+                      {
+                        type: 2, // Button
+                        style: 5, // Link button
+                        label: "Lancer Wordle",
+                        emoji: { name: "🎮" },
+                        url: `https://discord.com/activities/${clientId}`,
+                      },
+                    ],
+                  },
+                ],
+              },
+            });
+          }
+        }
+
+        return Response.json({ error: "Unknown interaction type" }, { status: 400 });
+      } catch (error) {
+        console.error("Error in /api/discord/interactions:", error);
         return Response.json({ error: "Internal server error" }, { status: 500 });
       }
     }

@@ -105,12 +105,60 @@ export function App({ language }: AppProps) {
   }, []);
 
   const initializePlayer = async () => {
-    // Check if playerId is in URL query parameter
     const params = new URLSearchParams(window.location.search);
     const urlPlayerId = params.get("playerId");
+    const isDiscordActivity = params.has("instance_id");
 
     let id = urlPlayerId || localStorage.getItem("playerId");
-    
+    let discordUser: any = null;
+
+    if (isDiscordActivity) {
+      try {
+        console.log("🎮 Discord Activity environment detected. Initializing SDK...");
+        // 1. Fetch Client ID
+        const configResponse = await fetch("/api/discord/config");
+        const { clientId } = await configResponse.json();
+
+        if (clientId) {
+          // 2. Dynamic Import of Discord SDK
+          const { DiscordSDK } = await import("@discord/embedded-app-sdk");
+          const discordSdk = new DiscordSDK(clientId);
+          await discordSdk.ready();
+
+          // 3. Authorize
+          const { code } = await discordSdk.commands.authorize({
+            client_id: clientId,
+            response_type: "code",
+            state: "",
+            prompt: "none",
+            scope: ["identify"],
+          });
+
+          // 4. Token Exchange
+          const tokenResponse = await fetch("/api/discord/auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+          const tokenData = await tokenResponse.json();
+
+          if (tokenData.access_token) {
+            // 5. Authenticate
+            const auth = await discordSdk.commands.authenticate({
+              access_token: tokenData.access_token,
+            });
+            discordUser = auth.user;
+            if (discordUser && discordUser.id) {
+              id = discordUser.id;
+              console.log(`✓ Authenticated as Discord User: ${discordUser.username} (${discordUser.id})`);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to initialize Discord SDK, falling back to standard ID:", error);
+      }
+    }
+
     if (!id) {
       id = crypto.randomUUID();
     }
