@@ -4,6 +4,7 @@ import { initializeDatabase, getPlayerStats, createOrUpdatePlayerStats, saveGame
 import { getDailyWord, getTodayDate } from "./dailyWord";
 import path from "path";
 import { verifyDiscordSignature } from "./discord/verify";
+import { registerSlashCommands } from "./discord/commands";
 
 const port = parseInt(process.env.PORT || "3000", 10);
 const distDir = path.join(import.meta.dir, "..", "dist");
@@ -12,6 +13,9 @@ console.log(`📖 Dictionaries loaded at startup`);
 console.log(`💾 Initializing database...`);
 await initializeDatabase();
 console.log(`✓ Database initialized`);
+
+// Register Discord slash commands
+await registerSlashCommands();
 
 const server = serve({
   port,
