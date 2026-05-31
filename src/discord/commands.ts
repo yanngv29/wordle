@@ -22,20 +22,20 @@ export async function registerSlashCommands(): Promise<void> {
 
   const commands: SlashCommand[] = [
     {
-      name: "play",
+      name: "yaplay",
       description: "Launch the Wordle game",
       name_localizations: {
-        fr: "jouer",
+        fr: "yajouer",
       },
       description_localizations: {
         fr: "Lancer le jeu Wordle",
       },
     },
     {
-      name: "wordle",
+      name: "yawordle",
       description: "Start a new Wordle game",
       name_localizations: {
-        fr: "wordle",
+        fr: "yawordle",
       },
       description_localizations: {
         fr: "Démarrer une partie de Wordle",

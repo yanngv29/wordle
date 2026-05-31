@@ -187,34 +187,47 @@ const server = serve({
     // Discord Bot interactions webhook endpoint
     if (url.pathname === "/api/discord/interactions" && req.method === "POST") {
       try {
+        console.log("\n🎮 Discord Interaction Received");
+        
         const signature = req.headers.get("x-signature-ed25519") || "";
         const timestamp = req.headers.get("x-signature-timestamp") || "";
         const rawBody = await req.text();
 
         const publicKey = process.env.DISCORD_PUBLIC_KEY;
         if (!publicKey) {
+          console.error("❌ Discord public key not configured");
           return Response.json({ error: "Discord public key not configured" }, { status: 500 });
         }
 
+        console.log("🔍 Verifying signature...");
         const isVerified = verifyDiscordSignature(rawBody, signature, timestamp, publicKey);
         if (!isVerified) {
+          console.error("❌ Signature verification failed");
           return new Response("Invalid signature", { status: 401 });
         }
+        console.log("✅ Signature verified");
 
         const interaction = JSON.parse(rawBody);
+        console.log(`📋 Interaction Type: ${interaction.type}`);
 
         // Type 1: Ping
         if (interaction.type === 1) {
+          console.log("🔔 Ping interaction - responding with pong");
           return Response.json({ type: 1 });
         }
 
         // Type 2: ApplicationCommand (Slash command)
         if (interaction.type === 2) {
           const commandName = interaction.data.name;
+          const userId = interaction.member?.user?.id || interaction.user?.id || "unknown";
+          const username = interaction.member?.user?.username || interaction.user?.username || "unknown";
+          
+          console.log(`⚡ Slash Command: /${commandName}`);
+          console.log(`   User: ${username} (${userId})`);
 
-          if (commandName === "play" || commandName === "wordle") {
+          if (commandName === "yaplay" || commandName === "yawordle") {
             const clientId = process.env.DISCORD_CLIENT_ID || "";
-            return Response.json({
+            const response = {
               type: 4, // ChannelMessageWithSource
               data: {
                 content: "🎮 **Prêt à jouer au Wordle ?** Cliquez sur le bouton ci-dessous pour lancer le jeu directement sous forme d'Activité Discord !",
@@ -233,13 +246,34 @@ const server = serve({
                   },
                 ],
               },
-            });
+            };
+            console.log(`✅ Sending response for /${commandName}`);
+            console.log(`   Content: "${response.data.content}"`);
+            console.log(`   Activity URL: https://discord.com/activities/${clientId}`);
+            return Response.json(response);
+          } else {
+            console.warn(`⚠️  Unknown command: /${commandName}`);
+            const errorResponse = {
+              type: 4,
+              data: {
+                content: `❌ Commande inconnue: /${commandName}`,
+                flags: 64, // Ephemeral message
+              }
+            };
+            return Response.json(errorResponse);
           }
         }
 
-        return Response.json({ error: "Unknown interaction type" }, { status: 400 });
+        console.warn(`⚠️  Unhandled interaction type: ${interaction.type}`);
+        return Response.json({ 
+          type: 4,
+          data: {
+            content: "❌ Type d'interaction non supporté",
+            flags: 64
+          }
+        });
       } catch (error) {
-        console.error("Error in /api/discord/interactions:", error);
+        console.error("❌ Error in /api/discord/interactions:", error);
         return Response.json({ error: "Internal server error" }, { status: 500 });
       }
     }
