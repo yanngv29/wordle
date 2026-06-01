@@ -56,7 +56,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: clamp(1.25rem, 4vw, 2rem);
   font-weight: bold;
   text-transform: uppercase;
   border: 2px solid var(--color-border);
@@ -86,7 +86,7 @@ body {
 .key {
   background-color: var(--color-key-bg);
   border-radius: 4px;
-  padding: 1.25rem 0.5rem;
+  padding: clamp(0.5rem, 2vw, 1.25rem) 0.5rem;
   font-weight: bold;
   cursor: pointer;
   display: flex;
@@ -95,6 +95,7 @@ body {
   flex: 1;
   user-select: none;
   transition: opacity 0.1s;
+  font-size: clamp(0.75rem, 2.5vw, 1rem);
 }
 
 .key:active {
