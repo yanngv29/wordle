@@ -46,6 +46,27 @@ export async function registerSlashCommands(): Promise<void> {
   try {
     console.log("🔧 Registering Discord slash commands...");
 
+    // First, fetch existing commands to preserve Entry Point and other system commands
+    const getResponse = await fetch(
+      `https://discord.com/api/v10/applications/${clientId}/commands`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bot ${botToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const existingCommands = await getResponse.json() as any[];
+    
+    // Keep all existing commands that are not being updated
+    const commandNames = commands.map(cmd => cmd.name);
+    const preservedCommands = existingCommands.filter(cmd => !commandNames.includes(cmd.name));
+    
+    // Combine preserved commands with our new commands
+    const allCommands = [...preservedCommands, ...commands];
+
     const response = await fetch(
       `https://discord.com/api/v10/applications/${clientId}/commands`,
       {
@@ -54,7 +75,7 @@ export async function registerSlashCommands(): Promise<void> {
           Authorization: `Bot ${botToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(commands),
+        body: JSON.stringify(allCommands),
       }
     );
 
