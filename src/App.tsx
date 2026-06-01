@@ -612,9 +612,9 @@ export function App({ language }: AppProps) {
         </div>
       )}
 
-      <main className="flex-1 w-full flex flex-col items-center justify-center gap-1">
+      <main className="flex-1 w-full flex flex-col items-center justify-center gap-1 overflow-hidden">
         {/* Grid */}
-        <div className={`grid grid-rows-6 gap-0.5 sm:gap-1 w-[min(90vw,350px)] ${shake ? "animate-shake" : ""}`}>
+        <div className={`grid grid-rows-6 gap-0.5 sm:gap-1 w-[min(90vw,350px)] h-[min(90vw,350px)] ${shake ? "animate-shake" : ""}`}>
           {[...Array(6)].map((_, rowIndex) => {
             const guess = guesses[rowIndex];
             const isCurrentRow = rowIndex === guesses.length;
