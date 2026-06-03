@@ -5,6 +5,8 @@ export interface PlayerStats {
   currentStreak: number;
   maxStreak: number;
   lastPlayedDate: string | null;
+  avatarKey?: string | null;        // S3 object key (e.g., "avatars/{playerId}.webp")
+  avatarUpdatedAt?: string | null;  // Timestamp for cache validation (ETag)
 }
 
 export interface GameRecord {

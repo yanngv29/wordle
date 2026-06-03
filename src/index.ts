@@ -2,6 +2,7 @@ import { serve } from "bun";
 import { getRandomWord, getWords } from "./dictionaries";
 import { initializeDatabase, getPlayerStats, createOrUpdatePlayerStats, saveGameRecord, getGameRecord } from "./db";
 import { getDailyWord, getTodayDate } from "./dailyWord";
+import { getS3Service } from "./services/s3-service";
 import path from "path";
 import { verifyDiscordSignature } from "./discord/verify";
 import { registerSlashCommands } from "./discord/commands";
@@ -13,6 +14,16 @@ console.log(`📖 Dictionaries loaded at startup`);
 console.log(`💾 Initializing database...`);
 await initializeDatabase();
 console.log(`✓ Database initialized`);
+
+// Initialize S3 service
+let s3Service: any;
+try {
+  s3Service = getS3Service();
+  await s3Service.verifyBucket();
+  console.log(`✓ S3 service initialized`);
+} catch (error) {
+  console.warn(`⚠️  S3 service initialization failed: ${error}. Avatar upload will be disabled.`);
+}
 
 // Register Discord slash commands
 await registerSlashCommands();
@@ -275,6 +286,145 @@ const server = serve({
       } catch (error) {
         console.error("❌ Error in /api/discord/interactions:", error);
         return Response.json({ error: "Internal server error" }, { status: 500 });
+      }
+    }
+
+    // Avatar endpoints
+    if (url.pathname === "/api/avatar/upload" && req.method === "POST") {
+      if (!s3Service) {
+        return Response.json({ error: "Avatar service not configured" }, { status: 503 });
+      }
+
+      try {
+        const contentType = req.headers.get("content-type") || "";
+        
+        if (!contentType.startsWith("multipart/form-data")) {
+          return Response.json({ error: "Content-Type must be multipart/form-data" }, { status: 400 });
+        }
+
+        // Parse multipart form
+        const formData = await req.formData();
+        const playerId = formData.get("playerId") as string;
+        const imageFile = formData.get("image") as File;
+
+        if (!playerId || !imageFile) {
+          return Response.json({ error: "Missing playerId or image" }, { status: 400 });
+        }
+
+        // Validate player ID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const discordRegex = /^\d{17,21}$/;
+        if (!uuidRegex.test(playerId) && !discordRegex.test(playerId)) {
+          return Response.json({ error: "Invalid playerId format" }, { status: 400 });
+        }
+
+        // Validate MIME type
+        if (!imageFile.type.startsWith("image/")) {
+          return Response.json({ error: "File must be an image" }, { status: 400 });
+        }
+
+        // Convert File to Buffer
+        const arrayBuffer = await imageFile.arrayBuffer();
+        const imageBuffer = Buffer.from(arrayBuffer);
+
+        // Upload to S3
+        const avatarKey = await s3Service.uploadAvatar(playerId, imageBuffer);
+
+        // Update player stats with avatar key
+        const now = new Date().toISOString();
+        await createOrUpdatePlayerStats(playerId, {
+          avatarKey,
+          avatarUpdatedAt: now,
+        });
+
+        return Response.json({
+          success: true,
+          avatarKey,
+          message: "Avatar uploaded successfully",
+        });
+      } catch (error: any) {
+        console.error("Error uploading avatar:", error);
+        return Response.json({ error: error.message || "Failed to upload avatar" }, { status: 400 });
+      }
+    }
+
+    // Get avatar endpoint
+    if (url.pathname.startsWith("/api/avatar/") && req.method === "GET") {
+      if (!s3Service) {
+        return Response.json({ error: "Avatar service not configured" }, { status: 503 });
+      }
+
+      try {
+        const playerId = url.pathname.replace("/api/avatar/", "");
+
+        if (!playerId) {
+          return Response.json({ error: "Invalid playerId" }, { status: 400 });
+        }
+
+        // Get player stats to check avatarUpdatedAt for ETag
+        const playerStats = await getPlayerStats(playerId);
+        
+        if (!playerStats || !playerStats.avatarKey) {
+          return Response.json({ error: "Avatar not found" }, { status: 404 });
+        }
+
+        // Get avatar buffer from S3
+        const imageBuffer = await s3Service.getAvatarBuffer(playerId);
+
+        if (!imageBuffer) {
+          return Response.json({ error: "Avatar not found in S3" }, { status: 404 });
+        }
+
+        // Generate ETag from avatarUpdatedAt
+        const etag = `"${playerStats.avatarUpdatedAt}"`;
+        
+        // Check If-None-Match header
+        if (req.headers.get("if-none-match") === etag) {
+          return new Response(null, { status: 304 }); // Not Modified
+        }
+
+        // Return image with cache headers
+        const cacheMaxAge = process.env.AVATAR_CACHE_MAX_AGE || "31536000";
+        return new Response(imageBuffer, {
+          headers: {
+            "Content-Type": "image/webp",
+            "Cache-Control": `public, max-age=${cacheMaxAge}`,
+            "ETag": etag,
+            "Last-Modified": playerStats.avatarUpdatedAt || new Date().toUTCString(),
+          },
+        });
+      } catch (error: any) {
+        console.error("Error retrieving avatar:", error);
+        return Response.json({ error: "Failed to retrieve avatar" }, { status: 500 });
+      }
+    }
+
+    // Delete avatar endpoint
+    if (url.pathname.startsWith("/api/avatar/") && req.method === "DELETE") {
+      if (!s3Service) {
+        return Response.json({ error: "Avatar service not configured" }, { status: 503 });
+      }
+
+      try {
+        const playerId = url.pathname.replace("/api/avatar/", "");
+
+        if (!playerId) {
+          return Response.json({ error: "Invalid playerId" }, { status: 400 });
+        }
+
+        // Delete from S3
+        await s3Service.deleteAvatar(playerId);
+
+        // Update player stats to clear avatar
+        await createOrUpdatePlayerStats(playerId, {
+          avatarKey: null,
+          avatarUpdatedAt: null,
+        });
+
+        return Response.json({ success: true, message: "Avatar deleted successfully" });
+      } catch (error: any) {
+        console.error("Error deleting avatar:", error);
+        return Response.json({ error: error.message || "Failed to delete avatar" }, { status: 400 });
       }
     }
 

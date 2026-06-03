@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import Avatar from "./Avatar";
+import AvatarUpload from "./AvatarUpload";
 import "./index.css";
 
 type Status = "correct" | "present" | "absent" | "empty";
@@ -94,6 +96,8 @@ export function App({ language }: AppProps) {
   const [gameDate] = useState(new Date().toISOString().split("T")[0]);
   const [showQrCode, setShowQrCode] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState("");
+  const [showAvatarUpload, setShowAvatarUpload] = useState(false);
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(0);
   const hasSavedRef = useRef<string | null>(null);
 
   const msgs = MESSAGES[language];
@@ -468,10 +472,30 @@ export function App({ language }: AppProps) {
   return (
     <div className="flex flex-col items-center min-h-screen p-2 max-w-md mx-auto relative bg-[#121213]">
       <header className="w-full border-b border-gray-700 py-2 mb-3 flex items-center justify-between">
+        {/* Avatar in header (top-left) */}
+        <div className="flex-shrink-0">
+          <button
+            onClick={() => setShowAvatarUpload(true)}
+            className="hover:opacity-80 transition-opacity"
+            title={language === "fr" ? "Changer l'avatar" : "Change avatar"}
+          >
+            <Avatar 
+              key={avatarRefreshKey}
+              playerId={playerId} 
+              username={playerId}
+              size="sm" 
+              showBorder={true}
+            />
+          </button>
+        </div>
+
+        {/* Title (centered) */}
         <h1 className="text-2xl md:text-4xl font-black tracking-widest flex-1 text-center">{TITLE_TRANSLATION[language]}</h1>
+
+        {/* Menu button (top-right) */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="absolute top-2 right-2 p-2 text-xl hover:bg-gray-700 rounded transition-colors"
+          className="absolute top-2 right-2 p-2 text-xl hover:bg-gray-700 rounded transition-colors flex-shrink-0"
           title="Menu"
         >
           ☰
@@ -534,6 +558,17 @@ export function App({ language }: AppProps) {
                   </div>
                 </div>
               )}
+
+              {/* Avatar Upload */}
+              <div className="pb-3 border-b border-gray-700">
+                <button
+                  onClick={() => setShowAvatarUpload(true)}
+                  className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors text-left font-semibold flex items-center gap-3"
+                >
+                  <span className="text-xl">📸</span>
+                  <span>{language === "fr" ? "Changer l'avatar" : "Change avatar"}</span>
+                </button>
+              </div>
 
               {/* Player ID and QR Code */}
               <div className="pb-3 border-b border-gray-700">
@@ -687,6 +722,24 @@ export function App({ language }: AppProps) {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Avatar Upload Modal */}
+      {showAvatarUpload && (
+        <AvatarUpload
+          playerId={playerId}
+          onUploadSuccess={(avatarKey) => {
+            setShowAvatarUpload(false);
+            // Refresh avatar by changing key (forces re-render)
+            setAvatarRefreshKey(prev => prev + 1);
+          }}
+          onUploadError={(error) => {
+            console.error("Avatar upload error:", error);
+          }}
+          onClose={() => {
+            setShowAvatarUpload(false);
+          }}
+        />
       )}
     </div>
   );

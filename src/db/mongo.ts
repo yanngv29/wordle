@@ -39,6 +39,8 @@ export class MongoDBProvider implements DatabaseProvider {
       currentStreak: result.currentStreak,
       maxStreak: result.maxStreak,
       lastPlayedDate: result.lastPlayedDate,
+      avatarKey: result.avatarKey || null,
+      avatarUpdatedAt: result.avatarUpdatedAt || null,
     };
   }
 
@@ -59,6 +61,8 @@ export class MongoDBProvider implements DatabaseProvider {
     if (stats.currentStreak !== undefined) updateDoc.$set.currentStreak = stats.currentStreak;
     if (stats.maxStreak !== undefined) updateDoc.$set.maxStreak = stats.maxStreak;
     if (stats.lastPlayedDate !== undefined) updateDoc.$set.lastPlayedDate = stats.lastPlayedDate;
+    if (stats.avatarKey !== undefined) updateDoc.$set.avatarKey = stats.avatarKey;
+    if (stats.avatarUpdatedAt !== undefined) updateDoc.$set.avatarUpdatedAt = stats.avatarUpdatedAt;
 
     // Check if we need to default properties on insert
     const defaults = {
@@ -67,6 +71,8 @@ export class MongoDBProvider implements DatabaseProvider {
       currentStreak: 0,
       maxStreak: 0,
       lastPlayedDate: null,
+      avatarKey: null,
+      avatarUpdatedAt: null,
     };
 
     for (const [key, value] of Object.entries(defaults)) {

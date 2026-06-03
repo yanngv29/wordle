@@ -17,6 +17,8 @@ export class SQLiteProvider implements DatabaseProvider {
         currentStreak INTEGER DEFAULT 0,
         maxStreak INTEGER DEFAULT 0,
         lastPlayedDate TEXT,
+        avatarKey TEXT,
+        avatarUpdatedAt TEXT,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
         updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
       );
@@ -48,8 +50,8 @@ export class SQLiteProvider implements DatabaseProvider {
 
     if (!existing) {
       const stmt = this.db.prepare(`
-        INSERT INTO players (playerId, gamesPlayed, gamesWon, currentStreak, maxStreak, lastPlayedDate)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO players (playerId, gamesPlayed, gamesWon, currentStreak, maxStreak, lastPlayedDate, avatarKey, avatarUpdatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
       stmt.run(
         playerId,
@@ -57,12 +59,14 @@ export class SQLiteProvider implements DatabaseProvider {
         stats.gamesWon || 0,
         stats.currentStreak || 0,
         stats.maxStreak || 0,
-        stats.lastPlayedDate || null
+        stats.lastPlayedDate || null,
+        stats.avatarKey || null,
+        stats.avatarUpdatedAt || null
       );
     } else {
       const stmt = this.db.prepare(`
         UPDATE players
-        SET gamesPlayed = ?, gamesWon = ?, currentStreak = ?, maxStreak = ?, lastPlayedDate = ?, updatedAt = CURRENT_TIMESTAMP
+        SET gamesPlayed = ?, gamesWon = ?, currentStreak = ?, maxStreak = ?, lastPlayedDate = ?, avatarKey = ?, avatarUpdatedAt = ?, updatedAt = CURRENT_TIMESTAMP
         WHERE playerId = ?
       `);
       stmt.run(
@@ -71,6 +75,8 @@ export class SQLiteProvider implements DatabaseProvider {
         stats.currentStreak !== undefined ? stats.currentStreak : existing.currentStreak,
         stats.maxStreak !== undefined ? stats.maxStreak : existing.maxStreak,
         stats.lastPlayedDate !== undefined ? stats.lastPlayedDate : existing.lastPlayedDate,
+        stats.avatarKey !== undefined ? stats.avatarKey : existing.avatarKey,
+        stats.avatarUpdatedAt !== undefined ? stats.avatarUpdatedAt : existing.avatarUpdatedAt,
         playerId
       );
     }
